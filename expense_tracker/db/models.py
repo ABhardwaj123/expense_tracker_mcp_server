@@ -1,5 +1,5 @@
 from sqlalchemy import Column , Integer , String , Boolean , Float , Date , DateTime , ForeignKey
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base , relationship
 from datetime import datetime
 
 
@@ -21,6 +21,7 @@ class Expense(Base):
     id = Column(Integer , primary_key=True)
     amount = Column(Float, nullable=False)
     category_id = Column(Integer , ForeignKey("categories.id") , nullable=False)
+    category = relationship("Category")
     # we will try to match by the best we can if nothing is given
     note = Column(String , nullable=True)
     date = Column(Date , nullable=False)
