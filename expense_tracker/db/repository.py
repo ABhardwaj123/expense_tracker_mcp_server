@@ -125,3 +125,14 @@ def set_budget(session , category_id , monthly_budget , month , year):
     session.add(new_budget)
     session.flush()
     return new_budget
+
+
+
+
+def get_budget(session , category_id , month , year):
+
+    budget = session.query(Budget).filter_by(
+        category_id=category_id, month=month, year=year
+    ).first()
+    return budget
+    
