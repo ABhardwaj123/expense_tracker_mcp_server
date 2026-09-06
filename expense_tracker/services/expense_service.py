@@ -2,6 +2,7 @@ from ..db.session import SessionLocal
 from ..db import repository
 from ..utils.categorizer import guess_category
 from datetime import date 
+import calendar
 
 
 
@@ -157,3 +158,43 @@ def set_budget(category=None, monthly_budget=None, month=None, year=None):
     session.commit()
     session.close()
     return result
+
+
+def check_budget_status(category=None , month=None , year=None):
+    session = SessionLocal()
+
+    today = date.today()
+    if month is None:
+        month = today.month
+    if year is None:
+        year = today.year
+
+
+    if category is not None:
+        category_id = repository.create_category(session, category)
+    else:
+        category_id = None
+
+    budget = repository.get_budget(session, category_id, month, year)
+
+    if budget is None:
+        session.close()
+        return {"message": f"No budget set for {category or 'overall'} in {month}/{year}"}
+
+    first_day_of_month = date(year, month, 1)
+    expenses = get_expenses(category=category, start_date=first_day_of_month, end_date=today, limit=100000)
+    spent_so_far = sum(expense["amount"] for expense in expenses)
+
+    days_elapsed = today.day
+    _, days_in_month = calendar.monthrange(year, month)
+
+    projected_total = (spent_so_far / days_elapsed) * days_in_month
+    on_track = projected_total <= budget.monthly_budget
+
+    result = {
+        "category": category,
+        "budget": budget.monthly_budget,
+        "spent_so_far": spent_so_far,
+        "projected_total": round(projected_total, 2),
+        "on_track": on_track,
+    }
